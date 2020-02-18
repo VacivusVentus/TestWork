@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	GetSystemInfo(&sysinf);
 	//*********************************************************************************
 	std::ifstream infile;
-	char *outFileName = nullptr;
+	std::ofstream outfile;
 	char flagcorrectargs = 0;
 	for (int i = 1; i < argc; i++)
 	{
@@ -26,21 +26,27 @@ int main(int argc, char *argv[])
 		char *outfn = strstr(argv[i], "out:");
 		if (infn)
 		{
-			flagcorrectargs |= 1;
 			char *filename = &argv[i][4];
 			infile.open(filename, std::ios::binary);
+			if (infile.is_open())
+			{
+				flagcorrectargs |= 1;
+			}
 		}
 		else if (outfn)
 		{
-			flagcorrectargs |= 2;
-			outFileName = &argv[i][4];
+			outfile.open(&argv[i][4], std::ios::binary);
+			if (outfile.is_open())
+			{
+				flagcorrectargs |= 2;
+			}
 		}
 	}
 	if (flagcorrectargs != 3) return -1;
 	LookAtTextpart *looker = nullptr;
 	try
 	{
-		looker = new LookAtTextpart(infile, symp, sysinf.dwNumberOfProcessors);
+		looker = new LookAtTextpart(infile, outfile, symp, sysinf.dwNumberOfProcessors);
 	}
 	catch (...)
 	{
@@ -49,6 +55,7 @@ int main(int argc, char *argv[])
 			delete looker;
 		}
 		infile.close();
+		outfile.close();
 		return -1;
 	}
 	looker->start();
@@ -56,6 +63,8 @@ int main(int argc, char *argv[])
 	{
 		delete looker;
 	}
+	infile.close();
+	outfile.close();
 	//*********************************************************************************
 	{
 		unsigned count = symp.getCount();

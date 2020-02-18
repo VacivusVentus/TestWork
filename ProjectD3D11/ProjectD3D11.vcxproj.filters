@@ -33,9 +33,6 @@
     <ClCompile Include="ImageFrameObj.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\lodepng.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="ScrollBarElement.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>

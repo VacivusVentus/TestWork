@@ -24,7 +24,7 @@ Rendere::Rendere()
 {
 	currentRenderer = this;
 	memset(&needReadCursorPos, 0, sizeof needReadCursorPos);
-	D3D_FEATURE_LEVEL f_levels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
+	D3D_FEATURE_LEVEL f_levels[] = { D3D_FEATURE_LEVEL_11_0 };
 	HRESULT hr = D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, f_levels, ARRAYSIZE(f_levels),
 		D3D11_SDK_VERSION, &m_device, &level, &m_context);
 	correctly = true;
@@ -119,17 +119,21 @@ bool Rendere::resize(HWND hWnd)
 	RELEASE(m_rendertarget);
 	RELEASE(m_swapchain);
 	DXGI_SWAP_CHAIN_DESC dxgi_sw = {};
-	dxgi_sw.BufferCount = 2;
+	dxgi_sw.BufferCount = 1;
 	dxgi_sw.OutputWindow = hWnd;
 	dxgi_sw.Windowed = TRUE;
 	dxgi_sw.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	dxgi_sw.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	dxgi_sw.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	dxgi_sw.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	dxgi_sw.BufferDesc.Width = r.right - r.left;
 	dxgi_sw.BufferDesc.Height = r.bottom - r.top;
 	dxgi_sw.SampleDesc.Count = 1;
 	HRESULT hr = d_factory->CreateSwapChain(m_device, &dxgi_sw, &m_swapchain);
-	if (FAILED(hr)) return false;
+	if (FAILED(hr))
+	{
+		MessageBox(hWnd, L"SwapChain", L"", MB_OK | MB_ICONERROR);
+		return false;
+	}
 	ID3D11Texture2D *texture = nullptr;
 	m_swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&texture);
 	if (!texture)
