@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 
 	//******************************************************************************
 	TreeSymbols symp;
+	TreeSymbols::setMainTree(&symp);
 	//*********************************************************************************
 	SYSTEM_INFO sysinf;
 	GetSystemInfo(&sysinf);
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 		char *outfn = strstr(argv[i], "out:");
 		if (infn)
 		{
-			char *filename = &argv[i][4];
+			char *filename = &argv[i][5];
 			infile.open(filename, std::ios::binary);
 			if (infile.is_open())
 			{
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
 		}
 		else if (outfn)
 		{
-			outfile.open(&argv[i][4], std::ios::binary);
+			outfile.open(&argv[i][5], std::ios::binary);
 			if (outfile.is_open())
 			{
 				flagcorrectargs |= 2;
@@ -58,6 +59,7 @@ int main(int argc, char *argv[])
 		outfile.close();
 		return -1;
 	}
+	TreeSymbols::initTreeList();
 	looker->start();
 	if (looker)
 	{
@@ -66,13 +68,6 @@ int main(int argc, char *argv[])
 	infile.close();
 	outfile.close();
 	//*********************************************************************************
-	{
-		unsigned count = symp.getCount();
-		TreeSymbols **kidElems = symp.getInside();
-		for (size_t i = 0; i < count; i++)
-		{
-			delete kidElems[i];
-		}
-	}
+	symp.release();
 	return 0;
 }

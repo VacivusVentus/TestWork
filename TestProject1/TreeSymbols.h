@@ -1,5 +1,6 @@
 #pragma once
 #include<mutex>
+#include<vector>
 #define TCHAR  char
 
 class TreeSymbols
@@ -11,6 +12,13 @@ public:
 	bool operator == (TCHAR &ch) { return ch == symb; }
 	TreeSymbols* findSymbol(TCHAR ch);
 	void includeRepeatChainSymbols();
+	void clearSimple();
+	//******************************************
+	static void initTreeList();
+	static void setMainTree(TreeSymbols *lpmainTree);
+	static void addTreetAll(TreeSymbols *lpmainTree);
+	static void release();
+	//-----------------------------------------------------
 	//******************************************
 	TCHAR getSymbol() const { return symb; }
 	unsigned getCount() const { return count; }

@@ -1,22 +1,17 @@
 #include "LookAtTextpart.h"
 
-const TCHAR *endstr = " \n,.!?@#$%^&*()=+-_\"'\\/:;";
+const TCHAR *endstr = " \n,.!?@#$%^&*()=+-_\"'\\/:;><{}	";
 #define MX(a, b) (a > b) ? a : b
 
 LookAtTextpart::LookAtTextpart(std::ifstream &lpfile, std::ofstream &lpoutFile, TreeSymbols &lptree, unsigned threedamount)
 	: file(lpfile)
 	, outfile(lpoutFile)
 	, tree(lptree)
-	, thr_amount(threedamount)
-	, threeds(nullptr)
+	, thr_amount(threedamount - 1)
 {
-	threeds = new std::thread*[thr_amount];
-	if (!threeds)
-	{
-		throw;
-	}
 	file.seekg(0, std::ios::end);
 	fileSize = file.tellg();
+	thr_amount = 50; // Ограничение в 16 потоков (16-ядерный CPU)
 }
 
 void LookAtTextpart::greatWork()
@@ -62,26 +57,20 @@ void LookAtTextpart::greatWork()
 void LookAtTextpart::start()
 {
 	maxlength = 0;
-	unsigned corrThreed = 0;
+	pos = 0;
 	for (int i = 0; i < thr_amount; i++)
 	{
-		threeds[i] = new std::thread([=]() {this->greatWork(); });
+		threeds[i] = std::async(std::launch::async, [=]() {this->greatWork(); });
 	}
-
 	for (int i = 0; i < thr_amount; i++)
 	{
-		if (threeds[i])
-		{
-			threeds[i]->join();
-			delete[] threeds[i];
-			threeds[i] = nullptr;
-		}
+		threeds[i].get();
 	}
 	//Save to file
 	pos = 0;
 	for (int i = 0; i < thr_amount; i++)
 	{
-		threeds[i] = new std::thread([=]() {
+		threeds[i] = std::async(std::launch::async, [=]() {
 			TCHAR *word = new TCHAR[maxlength + 1];
 			if (!word) return;
 			for (TreeSymbols *entry = this->getTreeBranch(); entry; entry = this->getTreeBranch())
@@ -94,17 +83,17 @@ void LookAtTextpart::start()
 
 	for (int i = 0; i < thr_amount; i++)
 	{
-		if (threeds[i])
-		{
-			threeds[i]->join();
-			delete[] threeds[i];
-			threeds[i] = nullptr;
-		}
+		threeds[i].get();
 	}
 }
 
 void LookAtTextpart::readPart(PartInfo* pinfo)
 {
+	if (pos >= fileSize)
+	{
+		pinfo->sizeofpart = 0;
+		return;
+	}
 	mutexFile.lock();
 	file.seekg(pos);
 	unsigned __int64 untilEnd = fileSize - pos;
@@ -148,7 +137,7 @@ void LookAtTextpart::printToFile(unsigned divch, TCHAR *chs, TreeSymbols *el)
 	unsigned r = el->getRepeat();
 	if (r)
 	{
-		TCHAR amtxt[16] = { 0 };
+		TCHAR amtxt[51] = { 0 };
 		sprintf_s(amtxt, sizeof amtxt, " = %d\n", r);
 		mutexFile.lock();
 		outfile.write(chs, divch + 1);
